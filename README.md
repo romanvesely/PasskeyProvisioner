@@ -83,5 +83,11 @@ An optional `settings.json` next to the EXE overrides the defaults. Check a buil
 
 ## License
 
-GNU General Public License v3.0, see [LICENSE](LICENSE). The bongo cat images in `src/PasskeyProvisioner.App/assets/bongo/` come from
-[Wreckstation/bongo-cat-for-streamers](https://github.com/Wreckstation/bongo-cat-for-streamers) (GPL-3.0), see the README next to them.
+GNU General Public License v3.0, see [LICENSE](LICENSE). Third-party material is listed in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
+
+## Credits
+
+- Colors: [Rosé Pine](https://github.com/rose-pine/palette) by the Rosé Pine contributors (MIT).
+- Bongo cat: [Wreckstation/bongo-cat-for-streamers](https://github.com/Wreckstation/bongo-cat-for-streamers) (GPL-3.0). Bongo Cat was created by
+  [StrayRogue](https://twitter.com/StrayRogue); the transparent artwork is by
+  [mandash1996](https://www.deviantart.com/mandash1996/art/Bongo-Cat-Meme-764472620).
