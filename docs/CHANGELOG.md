@@ -41,5 +41,6 @@ First release.
 - Headless runner `src/Invoke-PasskeyProvisioner.ps1` with `-WhatIf` and `-Resume`.
 
 ### Quality
+- Licensed under GPL-3.0.
 - Pester tests for the core module and the theme maths, an end to end UI test in simulation mode (also against the EXE), a test
   against the real Windows key dialog, PSScriptAnalyzer clean.

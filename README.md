@@ -80,3 +80,8 @@ Invoke-ScriptAnalyzer -Path .\src -Recurse -Settings .\PSScriptAnalyzerSettings.
 is a single file: it contains the app, unpacks itself to `%LOCALAPPDATA%\PasskeyProvisioner\app` on first start and needs no console.
 An optional `settings.json` next to the EXE overrides the defaults. Check a build with
 `powershell.exe -NoProfile -File .\tests\Invoke-UiSimulationTest.ps1 -ExePath .\dist\PasskeyProvisioner.exe`.
+
+## License
+
+GNU General Public License v3.0, see [LICENSE](LICENSE). The bongo cat images in `src/PasskeyProvisioner.App/assets/bongo/` come from
+[Wreckstation/bongo-cat-for-streamers](https://github.com/Wreckstation/bongo-cat-for-streamers) (GPL-3.0), see the README next to them.
