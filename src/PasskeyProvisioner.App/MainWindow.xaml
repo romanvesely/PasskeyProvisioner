@@ -1,0 +1,586 @@
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
+        x:Name="MainWindow"
+        Title="Passkey Provisioner"
+        Width="1280" Height="780" MinWidth="1100" MinHeight="680"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource BaseBrush}"
+        Foreground="{DynamicResource TextBrush}"
+        FontFamily="Segoe UI Variable Text, Segoe UI" FontSize="13"
+        UseLayoutRounding="True" SnapsToDevicePixels="True">
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <!--THEME-->
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="96"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- ============================== Navigation rail ============================== -->
+        <Border Grid.Column="0" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource OverlayBrush}"
+                BorderThickness="1" CornerRadius="16" Margin="8,4,0,8">
+            <DockPanel Margin="12,16,12,12" LastChildFill="False">
+                <Border DockPanel.Dock="Top" Width="44" Height="44" CornerRadius="12" Background="{DynamicResource IrisTintBrush}"
+                        HorizontalAlignment="Center" Margin="0,0,0,24">
+                    <TextBlock Style="{StaticResource IconText}" Text="{StaticResource GlyphKey}" FontSize="22"
+                               Foreground="{DynamicResource IrisTextBrush}"/>
+                </Border>
+                <StackPanel DockPanel.Dock="Top">
+                    <RadioButton x:Name="navRegister" Style="{StaticResource NavItem}" GroupName="nav" IsChecked="True"
+                                 ToolTip="Register keys for users (Ctrl+1)">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource IconText}" Text="{StaticResource GlyphRegister}" FontSize="20"
+                                       Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"/>
+                            <TextBlock Text="Register" FontSize="11" Margin="0,4,0,0" HorizontalAlignment="Center"
+                                       Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"/>
+                        </StackPanel>
+                    </RadioButton>
+                    <RadioButton x:Name="navKeys" Style="{StaticResource NavItem}" GroupName="nav"
+                                 ToolTip="Inspect and manage keys (Ctrl+2)">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource IconText}" Text="{StaticResource GlyphKey}" FontSize="20"
+                                       Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"/>
+                            <TextBlock Text="Keys" FontSize="11" Margin="0,4,0,0" HorizontalAlignment="Center"
+                                       Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"/>
+                        </StackPanel>
+                    </RadioButton>
+                    <RadioButton x:Name="navLog" Style="{StaticResource NavItem}" GroupName="nav"
+                                 ToolTip="Activity log (Ctrl+3)">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource IconText}" Text="{StaticResource GlyphLog}" FontSize="20"
+                                       Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"/>
+                            <TextBlock Text="Log" FontSize="11" Margin="0,4,0,0" HorizontalAlignment="Center"
+                                       Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"/>
+                        </StackPanel>
+                    </RadioButton>
+                </StackPanel>
+                <TextBlock x:Name="txtVersion" DockPanel.Dock="Bottom" Text="v0.3" FontSize="11" Foreground="{DynamicResource MutedBrush}"
+                           HorizontalAlignment="Center"/>
+                <Button x:Name="btnTheme" DockPanel.Dock="Bottom" Style="{StaticResource GhostButton}" Padding="0" MinHeight="44"
+                        Margin="0,0,0,8" ToolTip="Switch theme (Ctrl+T)">
+                    <StackPanel>
+                        <TextBlock x:Name="txtThemeIcon" Style="{StaticResource IconText}" FontSize="18" Text="&#xE706;"
+                                   Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                        <TextBlock x:Name="txtThemeName" Text="Dark" FontSize="11" Margin="0,3,0,0" HorizontalAlignment="Center"
+                                   Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                    </StackPanel>
+                </Button>
+            </DockPanel>
+        </Border>
+
+        <!-- ============================== Main area ============================== -->
+        <Grid Grid.Column="1" Margin="24,32,24,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Top bar -->
+            <Grid Grid.Row="0" Margin="0,0,0,20">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                    <TextBlock x:Name="txtViewTitle" Style="{StaticResource TitleText}" Text="Register keys"/>
+                    <TextBlock x:Name="txtViewSubtitle" Style="{StaticResource SubtleText}" Margin="0,2,0,0"
+                               Text="Register FIDO2 security keys in Microsoft Entra ID on behalf of users."/>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <!-- Bongo cat: peeks out from behind the tenant chip. It is drawn first (behind the chip); the artwork is rotated 14.07 degrees so its flat underside is level, and 2 px of it hide behind the chip so the black desk line is not visible. While a paw hits the desk, its flat "down" image is shown in the second canvas in front of the chip. -->
+                    <Grid Margin="8,0,0,0">
+                        <Canvas Width="0" Height="0" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,2,0,0" IsHitTestVisible="False"
+                                RenderOptions.BitmapScalingMode="HighQuality" AutomationProperties.Name="Bongo cat">
+                            <Canvas.RenderTransform>
+                                <TransformGroup>
+                                    <RotateTransform Angle="-14.07"/>
+                                    <ScaleTransform ScaleX="0.19" ScaleY="0.19"/>
+                                </TransformGroup>
+                            </Canvas.RenderTransform>
+                            <Image x:Name="bongoBase" Canvas.Left="-427.5" Canvas.Top="-287.5" Width="890" Height="441">
+                                <Image.Clip>
+                                    <RectangleGeometry Rect="205,0,445,441"/>
+                                </Image.Clip>
+                            </Image>
+                            <Image x:Name="bongoArmR" Canvas.Left="-240.5" Canvas.Top="-143.5" Width="130" Height="135"/>
+                            <Image x:Name="bongoArmL" Canvas.Left="48.5" Canvas.Top="-77.5" Width="137" Height="142"/>
+                        </Canvas>
+                        <Border Style="{StaticResource Chip}" Margin="0" ToolTip="Tenant">
+                            <TextBlock x:Name="txtTenantChip" FontSize="12" Foreground="{DynamicResource SubtleBrush}" Text="No tenant yet"/>
+                        </Border>
+                        <Canvas Width="0" Height="0" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,2,0,0" IsHitTestVisible="False"
+                                RenderOptions.BitmapScalingMode="HighQuality">
+                            <Canvas.RenderTransform>
+                                <TransformGroup>
+                                    <RotateTransform Angle="-14.07"/>
+                                    <ScaleTransform ScaleX="0.19" ScaleY="0.19"/>
+                                </TransformGroup>
+                            </Canvas.RenderTransform>
+                            <Image x:Name="bongoDownR" Canvas.Left="-240.5" Canvas.Top="-143.5" Width="130" Height="135" Visibility="Hidden"/>
+                            <Image x:Name="bongoDownL" Canvas.Left="48.5" Canvas.Top="-77.5" Width="137" Height="142" Visibility="Hidden"/>
+                        </Canvas>
+                    </Grid>
+
+                    <Border Style="{StaticResource Chip}" ToolTip="Microsoft Graph connection">
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse x:Name="dotConn" Width="8" Height="8" Fill="{DynamicResource GoldBrush}" Margin="0,0,8,0"/>
+                            <TextBlock x:Name="txtConn" FontSize="12" Text="Not connected"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource Chip}" ToolTip="Physical key detection">
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse x:Name="dotKey" Width="8" Height="8" Fill="{DynamicResource MutedBrush}" Margin="0,0,8,0"/>
+                            <TextBlock x:Name="txtKey" FontSize="12" Text="No key"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource Chip}" ToolTip="Graph API version in use">
+                        <TextBlock x:Name="txtApi" FontSize="12" Foreground="{DynamicResource PineTextBrush}" Text="Graph v1.0"/>
+                    </Border>
+                </StackPanel>
+            </Grid>
+
+            <!-- Views -->
+            <Grid Grid.Row="1">
+
+                <!-- ====================== REGISTER ====================== -->
+                <Grid x:Name="viewRegister">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Stepper -->
+                    <Grid Grid.Row="0" Margin="0,0,0,20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Orientation="Horizontal">
+                            <Border x:Name="stepDot1" Width="28" Height="28" CornerRadius="14" Background="{DynamicResource IrisBrush}">
+                                <TextBlock x:Name="stepDotText1" Text="1" FontWeight="SemiBold" Foreground="{DynamicResource BaseBrush}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock x:Name="stepLabel1" Text="Connect" FontWeight="SemiBold" Margin="10,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <Border x:Name="stepLine1" Grid.Column="1" Height="2" Margin="12,0" Background="{DynamicResource OverlayBrush}"/>
+                        <StackPanel Grid.Column="2" Orientation="Horizontal">
+                            <Border x:Name="stepDot2" Width="28" Height="28" CornerRadius="14" Background="{DynamicResource OverlayBrush}">
+                                <TextBlock x:Name="stepDotText2" Text="2" FontWeight="SemiBold" Foreground="{DynamicResource MutedBrush}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock x:Name="stepLabel2" Text="Source" FontWeight="SemiBold" Margin="10,0,0,0" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource MutedBrush}"/>
+                        </StackPanel>
+                        <Border x:Name="stepLine2" Grid.Column="3" Height="2" Margin="12,0" Background="{DynamicResource OverlayBrush}"/>
+                        <StackPanel Grid.Column="4" Orientation="Horizontal">
+                            <Border x:Name="stepDot3" Width="28" Height="28" CornerRadius="14" Background="{DynamicResource OverlayBrush}">
+                                <TextBlock x:Name="stepDotText3" Text="3" FontWeight="SemiBold" Foreground="{DynamicResource MutedBrush}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock x:Name="stepLabel3" Text="Enroll" FontWeight="SemiBold" Margin="10,0,0,0" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource MutedBrush}"/>
+                        </StackPanel>
+                        <Border x:Name="stepLine3" Grid.Column="5" Height="2" Margin="12,0" Background="{DynamicResource OverlayBrush}"/>
+                        <StackPanel Grid.Column="6" Orientation="Horizontal">
+                            <Border x:Name="stepDot4" Width="28" Height="28" CornerRadius="14" Background="{DynamicResource OverlayBrush}">
+                                <TextBlock x:Name="stepDotText4" Text="4" FontWeight="SemiBold" Foreground="{DynamicResource MutedBrush}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock x:Name="stepLabel4" Text="Results" FontWeight="SemiBold" Margin="10,0,0,0" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource MutedBrush}"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Step cards -->
+                    <Grid Grid.Row="1">
+
+                        <!-- Step 1: Connect -->
+                        <Border x:Name="stepCardConnect" Style="{StaticResource Card}" HorizontalAlignment="Left" VerticalAlignment="Top" Width="760">
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource CardTitle}" Text="Connect to Microsoft Graph"/>
+                                <TextBlock Style="{StaticResource SubtleText}" Margin="0,4,0,20"
+                                           Text="A browser window opens for the administrator sign-in. Required PowerShell modules are installed on first use."/>
+
+                                <TextBlock Style="{StaticResource FieldLabel}" Text="TENANT"/>
+                                <TextBox x:Name="txtTenant"/>
+                                <TextBlock x:Name="lblTenantError" Style="{StaticResource ErrorText}"/>
+
+                                <StackPanel Orientation="Horizontal" Margin="0,20,0,0">
+                                    <Button x:Name="btnConnect" Style="{StaticResource PrimaryButton}" Content="Connect" MinWidth="140"/>
+                                    <TextBlock x:Name="txtConnectDetail" Style="{StaticResource SubtleText}" VerticalAlignment="Center"
+                                               Margin="16,0,0,0" MaxWidth="480" Text=""/>
+                                </StackPanel>
+                                <ProgressBar x:Name="busyConnect" Style="{StaticResource BusyBar}" Margin="0,16,0,0" Visibility="Collapsed"/>
+
+                                <Border x:Name="panelConnected" Style="{StaticResource Banner}" Margin="0,20,0,0" Visibility="Collapsed"
+                                        Background="{DynamicResource FoamTintBrush}" BorderBrush="{DynamicResource FoamBrush}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Style="{StaticResource IconText}" Text="{StaticResource GlyphCheck}" Foreground="{DynamicResource FoamTextBrush}" Margin="0,0,12,0"/>
+                                        <TextBlock x:Name="txtConnectedAs" Text="Connected" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Style="{StaticResource Banner}" Margin="0,20,0,0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Style="{StaticResource IconText}" Text="{StaticResource GlyphInfo}" Foreground="{DynamicResource PineTextBrush}"
+                                                   VerticalAlignment="Top" Margin="0,2,12,0"/>
+                                        <TextBlock Style="{StaticResource SubtleText}" Foreground="{DynamicResource TextBrush}" MaxWidth="640"
+                                                   Text="Activate the Authentication Administrator role in PIM first. For users who hold admin roles themselves, the Privileged Authentication Administrator role is required."/>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Step 2: Source -->
+                        <Border x:Name="stepCardSource" Style="{StaticResource Card}" HorizontalAlignment="Left" VerticalAlignment="Top" Width="860" Visibility="Collapsed">
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource CardTitle}" Text="Choose what to register"/>
+                                <Border Background="{DynamicResource BaseBrush}" CornerRadius="8" Padding="4" HorizontalAlignment="Left" Margin="0,16,0,20">
+                                    <StackPanel Orientation="Horizontal">
+                                        <RadioButton x:Name="rbSingle" Style="{StaticResource Segment}" GroupName="mode" Content="Single user" IsChecked="True"/>
+                                        <RadioButton x:Name="rbCsv" Style="{StaticResource Segment}" GroupName="mode" Content="CSV file"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <Grid x:Name="panelSingle">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="16"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Style="{StaticResource FieldLabel}" Text="USER PRINCIPAL NAME"/>
+                                        <TextBox x:Name="txtUpn"/>
+                                        <TextBlock x:Name="lblUpnError" Style="{StaticResource ErrorText}"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Style="{StaticResource FieldLabel}" Text="KEY SERIAL ID"/>
+                                        <TextBox x:Name="txtSerial"/>
+                                        <TextBlock x:Name="lblSerialError" Style="{StaticResource ErrorText}"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <StackPanel x:Name="panelCsv" Visibility="Collapsed">
+                                    <TextBlock Style="{StaticResource FieldLabel}" Text="CSV FILE (COLUMNS: UPN, SERIALID)"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="12"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBox x:Name="txtCsvPath" Grid.Column="0" IsReadOnly="True"/>
+                                        <Button x:Name="btnBrowse" Grid.Column="2" Style="{StaticResource SecondaryButton}" Content="Browse..." MinWidth="110"/>
+                                    </Grid>
+                                    <TextBlock x:Name="lblCsvError" Style="{StaticResource ErrorText}"/>
+                                    <CheckBox x:Name="chkResume" Margin="0,16,0,0" IsChecked="True"
+                                              Content="Skip users that an earlier run already registered (reads the .result.csv next to the file)"/>
+                                    <Border x:Name="borderCsvSummary" Style="{StaticResource Banner}" Margin="0,16,0,0" Visibility="Collapsed">
+                                        <StackPanel>
+                                            <TextBlock x:Name="txtCsvSummary" FontWeight="SemiBold" Text=""/>
+                                            <TextBlock x:Name="txtCsvIssues" Style="{StaticResource SubtleText}" Margin="0,6,0,0" Text=""/>
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Step 3: Enroll -->
+                        <Border x:Name="stepCardEnroll" Style="{StaticResource Card}" Padding="16" Visibility="Collapsed">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <Border x:Name="bannerKey" Grid.Row="0" Style="{StaticResource Banner}" Margin="0,0,0,12" Visibility="Collapsed"
+                                        Background="{DynamicResource GoldTintBrush}" BorderBrush="{DynamicResource GoldBrush}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock x:Name="txtBannerIcon" Grid.Column="0" Style="{StaticResource IconText}" FontSize="22"
+                                                   Text="{StaticResource GlyphUsb}" Foreground="{DynamicResource GoldTextBrush}" Margin="0,0,16,0"/>
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <TextBlock x:Name="txtBannerTitle" FontWeight="SemiBold" FontSize="14" Text="Insert the key"/>
+                                            <TextBlock x:Name="txtBannerText" Style="{StaticResource SubtleText}" Foreground="{DynamicResource TextBrush}" Margin="0,2,0,0" Text=""/>
+                                        </StackPanel>
+                                        <Button x:Name="btnOverride" Grid.Column="2" Style="{StaticResource SecondaryButton}" Content="Use current key" VerticalAlignment="Center"
+                                                ToolTip="Continue with the key that is plugged in now, even if no swap was detected"/>
+                                    </Grid>
+                                </Border>
+
+                                <DataGrid x:Name="dgRows" Grid.Row="1" MinRowHeight="44">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="#" Binding="{Binding Index}" Width="52"/>
+                                        <DataGridTemplateColumn Header="Status" CellTemplate="{StaticResource StatusBadge}" Width="170"/>
+                                        <DataGridTextColumn Header="User (UPN)" Binding="{Binding Upn}" Width="2*"/>
+                                        <DataGridTextColumn Header="Serial" Binding="{Binding SerialId}" Width="*"/>
+                                        <DataGridTextColumn Header="Details" Binding="{Binding Detail}" Width="2*">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="TextWrapping" Value="Wrap"/>
+                                                    <Setter Property="Foreground" Value="{DynamicResource SubtleBrush}"/>
+                                                    <Setter Property="FontSize" Value="12"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+
+                                <Grid Grid.Row="2" Margin="0,16,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,24,0">
+                                        <TextBlock x:Name="txtBatchProgress" Style="{StaticResource SubtleText}" Margin="0,0,0,6" Text="Ready to start"/>
+                                        <ProgressBar x:Name="progBatch" Value="0"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                        <Button x:Name="btnRetry" Style="{StaticResource SecondaryButton}" Content="Retry failed" Margin="0,0,8,0" IsEnabled="False"/>
+                                        <Button x:Name="btnCancel" Style="{StaticResource DangerButton}" Content="Cancel" Margin="0,0,8,0" IsEnabled="False"
+                                                ToolTip="Stops after the current user"/>
+                                        <Button x:Name="btnStart" Style="{StaticResource PrimaryButton}" Content="Start" MinWidth="120"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Grid>
+                        </Border>
+
+                        <!-- Step 4: Results -->
+                        <Border x:Name="stepCardResults" Style="{StaticResource Card}" HorizontalAlignment="Left" VerticalAlignment="Top" Width="860" Visibility="Collapsed">
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource CardTitle}" Text="Results"/>
+                                <TextBlock x:Name="txtResultHeadline" Style="{StaticResource SubtleText}" Margin="0,4,0,20" Text=""/>
+                                <UniformGrid Rows="1" Columns="4">
+                                    <Border Background="{DynamicResource FoamTintBrush}" CornerRadius="10" Padding="16" Margin="0,0,8,0">
+                                        <StackPanel>
+                                            <TextBlock x:Name="txtCountRegistered" FontSize="28" FontWeight="SemiBold" Foreground="{DynamicResource FoamTextBrush}" Text="0"/>
+                                            <TextBlock Style="{StaticResource SubtleText}" Text="Registered"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Background="{DynamicResource PineTintBrush}" CornerRadius="10" Padding="16" Margin="8,0">
+                                        <StackPanel>
+                                            <TextBlock x:Name="txtCountAlready" FontSize="28" FontWeight="SemiBold" Foreground="{DynamicResource PineTextBrush}" Text="0"/>
+                                            <TextBlock Style="{StaticResource SubtleText}" Text="Already registered"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Background="{DynamicResource LoveTintBrush}" CornerRadius="10" Padding="16" Margin="8,0">
+                                        <StackPanel>
+                                            <TextBlock x:Name="txtCountFailed" FontSize="28" FontWeight="SemiBold" Foreground="{DynamicResource LoveTextBrush}" Text="0"/>
+                                            <TextBlock Style="{StaticResource SubtleText}" Text="Failed"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Background="{DynamicResource RoseTintBrush}" CornerRadius="10" Padding="16" Margin="8,0,0,0">
+                                        <StackPanel>
+                                            <TextBlock x:Name="txtCountSkipped" FontSize="28" FontWeight="SemiBold" Foreground="{DynamicResource RoseTextBrush}" Text="0"/>
+                                            <TextBlock Style="{StaticResource SubtleText}" Text="Skipped"/>
+                                        </StackPanel>
+                                    </Border>
+                                </UniformGrid>
+                                <TextBlock x:Name="txtResultPath" Style="{StaticResource SubtleText}" Margin="0,20,0,0" Text=""/>
+                                <StackPanel Orientation="Horizontal" Margin="0,20,0,0">
+                                    <Button x:Name="btnExport" Style="{StaticResource SecondaryButton}" Content="Export results..." Margin="0,0,8,0"/>
+                                    <Button x:Name="btnOpenResults" Style="{StaticResource SecondaryButton}" Content="Open folder" Margin="0,0,8,0"/>
+                                    <Button x:Name="btnNewBatch" Style="{StaticResource PrimaryButton}" Content="New batch"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
+                    <!-- Footer navigation -->
+                    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,16">
+                        <Button x:Name="btnBack" Style="{StaticResource SecondaryButton}" Content="Back" Margin="0,0,8,0" MinWidth="100"/>
+                        <Button x:Name="btnNext" Style="{StaticResource PrimaryButton}" Content="Next" MinWidth="120"/>
+                    </StackPanel>
+                </Grid>
+
+                <!-- ====================== KEYS ====================== -->
+                <ScrollViewer x:Name="viewKeys" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <Grid Margin="0,0,10,16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="16"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0">
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource CardTitle}" Text="Key detection"/>
+                                <TextBlock Style="{StaticResource SubtleText}" Margin="0,4,0,16"
+                                           Text="Looks for a plugged-in FIDO2 key every two seconds."/>
+                                <Border x:Name="borderKeyStatus" Style="{StaticResource Banner}" Background="{DynamicResource BaseBrush}" BorderBrush="{DynamicResource OverlayBrush}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock x:Name="txtKeyStatusIcon" Style="{StaticResource IconText}" FontSize="24" Text="{StaticResource GlyphUsb}"
+                                                   Foreground="{DynamicResource MutedBrush}" Margin="0,0,16,0"/>
+                                        <StackPanel VerticalAlignment="Center">
+                                            <TextBlock x:Name="txtKeyStatusTitle" FontWeight="SemiBold" FontSize="14" Text="No key detected"/>
+                                            <TextBlock x:Name="txtKeyStatusDetail" Style="{StaticResource SubtleText}" Margin="0,2,0,0" Text="Insert a FIDO2 security key."/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+                                <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
+                                    <Button x:Name="btnDetect" Style="{StaticResource SecondaryButton}" Content="Detect now" Margin="0,0,8,0"/>
+                                    <Button x:Name="btnListHid" Style="{StaticResource GhostButton}" Content="Show all USB HID devices"
+                                            ToolTip="Diagnostics: use this when a plugged-in key is not detected"/>
+                                </StackPanel>
+                                <TextBox x:Name="txtHidList" Style="{StaticResource LogTextBox}" Margin="0,12,0,0" Height="150" Visibility="Collapsed"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}" Margin="0,16,0,0">
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource CardTitle}" Text="Manage key"/>
+                                <TextBlock Style="{StaticResource SubtleText}" Margin="0,4,0,16"
+                                           Text="Reset a key or set its PIN with the Windows security key dialog. No administrator rights needed."/>
+                                <StackPanel Orientation="Horizontal">
+                                    <Button x:Name="btnReset" Style="{StaticResource DangerButton}" Content="Reset key..." Margin="0,0,8,0"/>
+                                    <Button x:Name="btnPin" Style="{StaticResource SecondaryButton}" Content="Set or change PIN..."/>
+                                </StackPanel>
+
+                                <Border x:Name="panelManage" Style="{StaticResource Banner}" Margin="0,16,0,0" Visibility="Collapsed">
+                                    <StackPanel>
+                                        <TextBlock x:Name="txtManageTitle" FontWeight="SemiBold" FontSize="14" Text=""/>
+                                        <TextBlock x:Name="txtManageWarning" Style="{StaticResource SubtleText}" Foreground="{DynamicResource LoveTextBrush}"
+                                                   Margin="0,4,0,0" Text="" Visibility="Collapsed"/>
+                                        <TextBlock x:Name="txtManageSteps" Style="{StaticResource SubtleText}" Foreground="{DynamicResource TextBrush}"
+                                                   Margin="0,8,0,0" Text=""/>
+                                        <StackPanel x:Name="panelResetCountdown" Margin="0,12,0,0" Visibility="Collapsed">
+                                            <TextBlock x:Name="txtResetCountdown" FontWeight="SemiBold" Text=""/>
+                                            <ProgressBar x:Name="progReset" Margin="0,6,0,0" Value="0"/>
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
+                                            <Button x:Name="btnOpenKeySettings" Style="{StaticResource PrimaryButton}" Content="Open key management" Margin="0,0,8,0"/>
+                                            <Button x:Name="btnManageDone" Style="{StaticResource SecondaryButton}" Content="Done"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2">
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource CardTitle}" Text="Look up a user in Entra"/>
+                                <TextBlock Style="{StaticResource SubtleText}" Margin="0,4,0,16"
+                                           Text="Shows the passkeys registered for a user. Requires a connection (Register, step 1)."/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="12"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Style="{StaticResource FieldLabel}" Text="USER PRINCIPAL NAME"/>
+                                        <TextBox x:Name="txtLookupUpn"/>
+                                    </StackPanel>
+                                    <Button x:Name="btnLookup" Grid.Column="2" Style="{StaticResource PrimaryButton}" Content="Look up" VerticalAlignment="Bottom" MinWidth="110"/>
+                                </Grid>
+                                <TextBlock x:Name="lblLookupInfo" Style="{StaticResource SubtleText}" Margin="0,12,0,0" Text=""/>
+                                <DataGrid x:Name="dgLookup" Margin="0,12,0,0" Height="170" Visibility="Collapsed" MinRowHeight="36">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Display name" Binding="{Binding DisplayName}" Width="2*"/>
+                                        <DataGridTextColumn Header="Created" Binding="{Binding Created}" Width="*"/>
+                                        <DataGridTextColumn Header="Model" Binding="{Binding Model}" Width="*"/>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}" Margin="0,16,0,0">
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource CardTitle}" Text="Remove an Entra registration"/>
+                                <TextBlock Style="{StaticResource SubtleText}" Margin="0,4,0,16"
+                                           Text="After a reset the old passkey still exists in Entra. Find it by user and serial, delete it, then register the key again."/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="12"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="12"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Style="{StaticResource FieldLabel}" Text="USER PRINCIPAL NAME"/>
+                                        <TextBox x:Name="txtCleanUpn"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Style="{StaticResource FieldLabel}" Text="KEY SERIAL ID"/>
+                                        <TextBox x:Name="txtCleanSerial"/>
+                                    </StackPanel>
+                                    <Button x:Name="btnCleanFind" Grid.Column="4" Style="{StaticResource SecondaryButton}" Content="Find" VerticalAlignment="Bottom" MinWidth="90"/>
+                                </Grid>
+                                <TextBlock x:Name="lblCleanInfo" Style="{StaticResource SubtleText}" Margin="0,12,0,0" Text=""/>
+                                <Button x:Name="btnCleanDelete" Style="{StaticResource DangerButton}" Content="Delete registration..." Margin="0,12,0,0"
+                                        HorizontalAlignment="Left" IsEnabled="False"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Grid>
+                </ScrollViewer>
+
+                <!-- ====================== LOG ====================== -->
+                <Border x:Name="viewLog" Style="{StaticResource Card}" Padding="16" Visibility="Collapsed">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <Grid Grid.Row="0" Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Background="{DynamicResource BaseBrush}" CornerRadius="8" Padding="4">
+                                <StackPanel Orientation="Horizontal">
+                                    <RadioButton x:Name="rbLogAll" Style="{StaticResource Segment}" GroupName="logfilter" Content="All" IsChecked="True"/>
+                                    <RadioButton x:Name="rbLogInfo" Style="{StaticResource Segment}" GroupName="logfilter" Content="Info"/>
+                                    <RadioButton x:Name="rbLogSuccess" Style="{StaticResource Segment}" GroupName="logfilter" Content="Success"/>
+                                    <RadioButton x:Name="rbLogWarning" Style="{StaticResource Segment}" GroupName="logfilter" Content="Warnings"/>
+                                    <RadioButton x:Name="rbLogError" Style="{StaticResource Segment}" GroupName="logfilter" Content="Errors"/>
+                                </StackPanel>
+                            </Border>
+                            <StackPanel Grid.Column="2" Orientation="Horizontal">
+                                <Button x:Name="btnCopyLog" Style="{StaticResource SecondaryButton}" Content="Copy" Margin="0,0,8,0"/>
+                                <Button x:Name="btnOpenLogFolder" Style="{StaticResource SecondaryButton}" Content="Open log folder" Margin="0,0,8,0"/>
+                                <Button x:Name="btnClearLog" Style="{StaticResource GhostButton}" Content="Clear view"/>
+                            </StackPanel>
+                        </Grid>
+                        <TextBox x:Name="txtLog" Grid.Row="1" Style="{StaticResource LogTextBox}" SpellCheck.IsEnabled="False"/>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <!-- Status bar -->
+            <Grid Grid.Row="2" Margin="0,0,0,10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <ProgressBar x:Name="busyStatus" Grid.Column="0" Style="{StaticResource BusyBar}" Width="96" Margin="0,0,12,0" Visibility="Collapsed"/>
+                <TextBlock x:Name="txtStatus" Grid.Column="1" Style="{StaticResource SubtleText}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                           TextWrapping="NoWrap" Text="Ready"/>
+                <TextBlock x:Name="txtLogPath" Grid.Column="2" FontSize="11" Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center" Text=""/>
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>

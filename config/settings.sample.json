@@ -1,0 +1,15 @@
+{
+  "tenantId": "your-tenant.onmicrosoft.com",
+  "displayNamePrefix": "FIDO SECURITY KEY",
+  "legacyDisplayNamePrefixes": ["T2F2-TypeC"],
+  "graphApiVersion": "v1.0",
+  "modules": {
+    "Microsoft.Graph.Authentication": "2.39.0",
+    "Microsoft.Graph.Identity.SignIns": "2.39.0",
+    "Microsoft.Graph.Beta.Identity.SignIns": "2.39.0",
+    "DSInternals.Passkeys": "3.2.0"
+  },
+  "logDirectory": "%LOCALAPPDATA%\\PasskeyProvisioner\\logs",
+  "serialPattern": "",
+  "centerPopupWindows": true
+}

@@ -1,0 +1,27 @@
+# Build output and local runtime data
+/dist/
+/logs/
+*.log
+*.local.*
+config/settings.json
+
+# Real user data never goes in
+samples/*.csv
+!samples/users.sample.csv
+users-*.csv
+*.result.csv
+
+# Secrets and local settings
+*.secret
+.env
+
+# OneDrive / editor
+desktop.ini
+~$*
+
+# Pester output
+testResults.xml
+coverage.xml
+
+# Internal planning notes (German), kept locally
+docs/PLAN.md
