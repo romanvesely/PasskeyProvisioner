@@ -97,7 +97,8 @@ adds a Start menu shortcut and logs to `C:\Windows\Logs\Software\PasskeyProvisio
 
 Exit codes: 0 done, 1618 the app is running (Intune retries later), 1 error. Organisation values stay local and are gitignored:
 `packaging\package.local.json` (`{ "targetDir": "..." }`) and `packaging\settings.local.json` (installed as `settings.json`).
-Raise `ModuleVersion` in `PasskeyProvisioner.Core.psd1` for every release, it becomes the EXE file version.
+Raise `ModuleVersion` in `PasskeyProvisioner.Core.psd1` for every release, it becomes the EXE file version. The full release and
+update steps (package in Robopack, detection rule, supersedence, checks on a device) are in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 ## License
 
