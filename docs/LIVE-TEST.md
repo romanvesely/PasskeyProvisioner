@@ -122,6 +122,14 @@ registered for `test.user@contoso.com` as `TEST KEY`. Run as a standard user.
    the tool moved it.
 3. With single sign-on the sign-in is silent and no window appears; then there is nothing to check.
 4. Optional: set `"centerPopupWindows": false` in `config/settings.json` to switch the centering off.
+5. The Windows sign-in window itself (process `Microsoft.AAD.BrokerPlugin`, title "Work or school account") is deliberately not
+   moved: centering it cut the page off on the right. It opens where Windows puts it and is brought to the front ("Brought this
+   window to the front"). It has no owner and no taskbar button, so whenever the tool window comes to the front while it is
+   open, it is brought back ("Brought the sign-in window back to the front"). Check: click *Connect*, wait for the sign-in window,
+   click the tool window or its taskbar button. The sign-in window must come back in front of it.
+6. Admin accounts must not be added under Settings > Accounts > Access work or school on the device. Windows then answers with
+   a stale primary refresh token and the sign-in fails with `AADSTS1400011: Session key is not provided`. Remove the account
+   there and sign in again.
 
 ## EXE (Phase 6)
 

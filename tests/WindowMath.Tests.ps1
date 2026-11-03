@@ -8,6 +8,21 @@ BeforeAll {
     }
 }
 
+Describe 'Test-RaiseSignInWindow' {
+    It 'raises the sign-in window when the tool window has just come to the front' {
+        Test-RaiseSignInWindow -ToolIsForeground $true -ToolWasForeground $false -SignInWindowOpen $true | Should -BeTrue
+    }
+    It 'does not keep pulling the sign-in window forward while the tool window stays in front' {
+        Test-RaiseSignInWindow -ToolIsForeground $true -ToolWasForeground $true -SignInWindowOpen $true | Should -BeFalse
+    }
+    It 'does nothing when the sign-in window is in front' {
+        Test-RaiseSignInWindow -ToolIsForeground $false -ToolWasForeground $true -SignInWindowOpen $true | Should -BeFalse
+    }
+    It 'does nothing without an open sign-in window' {
+        Test-RaiseSignInWindow -ToolIsForeground $true -ToolWasForeground $false -SignInWindowOpen $false | Should -BeFalse
+    }
+}
+
 Describe 'Get-CenteredOrigin' {
     It 'centers the dialog over the tool window' {
         $p = Get-CenteredOrigin @script:Common

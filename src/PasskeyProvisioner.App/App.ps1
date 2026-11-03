@@ -1037,14 +1037,21 @@ function Set-KeyDialogPosition {
 $script:SignInKnown = $null
 $script:SignInLastScan = [datetime]::MinValue
 $script:QuietDetail = $false
+$script:SignInWindows = New-Object 'System.Collections.Generic.List[long]'   # sign-in windows found in this run
+$script:SignInToolWasForeground = $false
 
 function Start-SignInWatch {
     $script:SignInKnown = New-Object 'System.Collections.Generic.HashSet[long]'
     foreach ($h in [PasskeyProvisioner.WindowTools]::VisibleTopLevel()) { [void]$script:SignInKnown.Add($h) }
     $script:SignInLastScan = [datetime]::MinValue
+    $script:SignInWindows.Clear()
+    $script:SignInToolWasForeground = $false
 }
 
-function Stop-SignInWatch { $script:SignInKnown = $null }
+function Stop-SignInWatch {
+    $script:SignInKnown = $null
+    $script:SignInWindows.Clear()
+}
 
 function Update-SignInWindow {
     if (-not $script:SignInKnown) { return }
@@ -1063,13 +1070,34 @@ function Update-SignInWindow {
         $script:QuietDetail = $true
         Write-UiLog ("Window opened during sign-in: process {0}, class {1}, title '{2}', {3}x{4}, owner {5}." -f $name, [PasskeyProvisioner.WindowTools]::ClassName($ptr), [PasskeyProvisioner.WindowTools]::TitleOf($ptr), $rect[2], $rect[3], $(if ($owner -eq [IntPtr]::Zero) { 'none' } elseif ($owner -eq $ours) { 'this window' } elseif ($owner -eq $console) { 'console' } else { 'other' })) 'Info'
         $ownedByUs = ($owner -ne [IntPtr]::Zero) -and ($owner -eq $ours -or ($console -ne [IntPtr]::Zero -and $owner -eq $console))
-        $broker = $name -in 'Microsoft.AAD.BrokerPlugin', 'CredentialUIBroker', 'msedgewebview2'
-        if ($script:Config.centerPopupWindows -and ($ownedByUs -or $broker) -and $rect[2] -ge 200 -and $rect[3] -ge 200) {
+        # Not 'Microsoft.AAD.BrokerPlugin': moving its CoreWindow right after it opens leaves the sign-in page laid out for a wider
+        # window, so the account list is cut off on the right (seen live, gone with centerPopupWindows=false).
+        $broker = $name -in 'CredentialUIBroker', 'msedgewebview2'
+        $signInBroker = $name -eq 'Microsoft.AAD.BrokerPlugin'
+        $big = $rect[2] -ge 200 -and $rect[3] -ge 200
+        if ($script:Config.centerPopupWindows -and ($ownedByUs -or $broker) -and $big) {
             Move-WindowToScreenCenter -Window $ptr
             Write-UiLog 'Centered this window on the screen.' 'Info'
+        } elseif (($ownedByUs -or $broker -or $signInBroker) -and $big) {
+            # Not moved, but it must not stay behind this window: it has no owner and no taskbar button.
+            [PasskeyProvisioner.WindowTools]::Activate($ptr)
+            Write-UiLog 'Brought this window to the front.' 'Info'
         }
+        if (($ownedByUs -or $broker -or $signInBroker) -and $big) { $script:SignInWindows.Add($h) }
         $script:QuietDetail = $false
     }
+
+    # The sign-in window has no owner, so a click on this window (or its taskbar button) puts this window in front of it and the
+    # sign-in seems to hang. Whenever this window comes to the front while a sign-in window is open, bring that window back.
+    [void]$script:SignInWindows.RemoveAll([Predicate[long]] { param($w) -not [PasskeyProvisioner.WindowTools]::IsVisibleWindow([IntPtr]$w) })
+    $toolFront = ([PasskeyProvisioner.WindowTools]::ForegroundWindow() -eq $ours)
+    if (Test-RaiseSignInWindow -ToolIsForeground $toolFront -ToolWasForeground $script:SignInToolWasForeground -SignInWindowOpen ($script:SignInWindows.Count -gt 0)) {
+        [PasskeyProvisioner.WindowTools]::Activate([IntPtr]$script:SignInWindows[$script:SignInWindows.Count - 1])
+        $script:QuietDetail = $true
+        Write-UiLog 'Brought the sign-in window back to the front.' 'Info'
+        $script:QuietDetail = $false
+    }
+    $script:SignInToolWasForeground = $toolFront
 }
 
 function Find-NewKeyDialog {

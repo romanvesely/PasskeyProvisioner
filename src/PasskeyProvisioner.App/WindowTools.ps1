@@ -33,6 +33,7 @@ namespace PasskeyProvisioner
         [DllImport("user32.dll")] private static extern bool SetWindowPos(IntPtr h, IntPtr after, int x, int y, int cx, int cy, uint flags);
         [DllImport("user32.dll")] private static extern bool PostMessage(IntPtr h, uint msg, IntPtr w, IntPtr l);
         [DllImport("user32.dll")] private static extern bool SetForegroundWindow(IntPtr h);
+        [DllImport("user32.dll")] private static extern IntPtr GetForegroundWindow();
         [DllImport("user32.dll")] private static extern IntPtr MonitorFromWindow(IntPtr h, uint flags);
         [DllImport("user32.dll")] private static extern uint GetWindowThreadProcessId(IntPtr h, out uint pid);
         [DllImport("user32.dll", CharSet = CharSet.Unicode)] private static extern int GetWindowText(IntPtr h, StringBuilder s, int n);
@@ -86,6 +87,9 @@ namespace PasskeyProvisioner
 
         // The console window of this process (zero when it has none, for example a compiled GUI program).
         public static IntPtr ConsoleWindow() { return GetConsoleWindow(); }
+
+        // The window that currently has the keyboard focus (any program).
+        public static IntPtr ForegroundWindow() { return GetForegroundWindow(); }
 
         public static bool IsVisibleWindow(IntPtr h) { return h != IntPtr.Zero && IsWindow(h) && IsWindowVisible(h); }
 
@@ -142,6 +146,10 @@ namespace PasskeyProvisioner
             SetWindowPos(h, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
             SetForegroundWindow(h);
         }
+
+        // Gives the window the focus and puts it in front, without touching its position, size or z-order flags (a window of
+        // the Microsoft sign-in broker showed its page cut off after it had been moved).
+        public static void Activate(IntPtr h) { SetForegroundWindow(h); }
 
         // True when a child window of this frame belongs to a process with this name (for example SystemSettings behind an
         // ApplicationFrameWindow). Language independent, unlike the window title.

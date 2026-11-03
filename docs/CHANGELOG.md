@@ -3,7 +3,13 @@
 All notable changes are documented here. Format based on [Keep a Changelog](https://keepachangelog.com/).
 Live test results for changes that touch the enrollment path are recorded under the respective entry.
 
-## [Unreleased]
+## [1.0.1] - 2026-11-03
+
+### Fixed
+- The Windows sign-in window (`Microsoft.AAD.BrokerPlugin`) is no longer centered by the tool: moving it right after it opened
+  cut the account list off on the right.
+- The sign-in window is brought to the front when it opens and again whenever the tool window comes to the front while it is open.
+  It has no owner and no taskbar button, so it used to disappear behind the tool window and clicks in the tool seemed to do nothing.
 
 ### Added
 - `build\Build-Installer.ps1` builds a self-contained installer script for Intune (EXE and optional `settings.json` embedded,

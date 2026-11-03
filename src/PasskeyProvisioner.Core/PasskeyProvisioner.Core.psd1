@@ -1,6 +1,6 @@
 @{
     RootModule            = 'PasskeyProvisioner.Core.psm1'
-    ModuleVersion         = '1.0.0'
+    ModuleVersion         = '1.0.1'
     GUID                  = 'b1f0c3a2-6e0d-4f4e-9a57-2d1c8e7a4b90'
     Author                = 'IT'
     CompanyName           = 'Passkey Provisioner'

@@ -64,6 +64,7 @@ re-insert the key by writing `0` or `1` into `%TEMP%\passkeyprovisioner-sim-key.
 | HTTP 403 when registering | The Authentication Administrator role is not active. Activate it in PIM and connect again. Users who hold admin roles themselves need *Privileged Authentication Administrator*. |
 | "Assembly with same name is already loaded" | Two versions of a Graph module in one process. Close the app and start it again; never import other versions by hand. See [docs/MODULES.md](docs/MODULES.md). |
 | The EXE disappears or does not start | Microsoft Defender may treat a compiled PowerShell tool as suspicious. Ask IT for an exclusion for the folder, or run the script instead. Startup errors are written to `%LOCALAPPDATA%\PasskeyProvisioner\startup-error.log`. |
+| `AADSTS1400011: Session key is not provided` in the sign-in window | The admin account was added to the device under Settings > Accounts > Access work or school. Remove it there (the device stays enrolled) and sign in again. |
 | No sign-in window | The sign-in needs a window handle; the EXE creates a hidden console for it (see `spikes/README.md`). If it still does not appear, look in the log for "Window opened during sign-in". |
 | Reset does not work | A key accepts a reset only in the first 10 seconds after it was inserted. Follow the countdown in the Keys view. |
 ## Development
@@ -92,7 +93,7 @@ adds a Start menu shortcut and logs to `C:\Windows\Logs\Software\PasskeyProvisio
 |---|---|
 | Install | `powershell.exe -NoProfile -ExecutionPolicy Bypass -File Install-PasskeyProvisioner.ps1` |
 | Uninstall | `powershell.exe -NoProfile -ExecutionPolicy Bypass -File Install-PasskeyProvisioner.ps1 -Uninstall` |
-| Detection | File `<folder>\PasskeyProvisioner.exe`, version greater than or equal to the release (`1.0.0.0`) |
+| Detection | File `<folder>\PasskeyProvisioner.exe`, version greater than or equal to the release (for example `1.0.1.0`; for an update use the new version, not the old one) |
 
 Exit codes: 0 done, 1618 the app is running (Intune retries later), 1 error. Organisation values stay local and are gitignored:
 `packaging\package.local.json` (`{ "targetDir": "..." }`) and `packaging\settings.local.json` (installed as `settings.json`).

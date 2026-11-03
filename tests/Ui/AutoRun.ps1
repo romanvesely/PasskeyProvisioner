@@ -264,7 +264,8 @@ try {
     Assert-Check 'a pop-up owned by the tool is centered on the screen' (Wait-Until $isCentered 25) 'no centered probe window found'
     Start-Sleep -Milliseconds 600
     Update-SignInWindow
-    $other = & $findWindow 'PasskeyProvisionerUnrelated'
+    Assert-Check 'the sign-in window is remembered so it can be brought back to the front' ($script:SignInWindows.Count -ge 1) "count $($script:SignInWindows.Count)"
+    $other =& $findWindow 'PasskeyProvisionerUnrelated'
     $otherRect = $(if ($other -ne [IntPtr]::Zero) { [PasskeyProvisioner.WindowTools]::RectOf($other) } else { @(-1, -1, 0, 0) })
     Assert-Check 'an unrelated window of another program is left alone' ($other -ne [IntPtr]::Zero -and $otherRect[0] -le 30 -and $otherRect[1] -le 30) ($otherRect -join ',')
     $popupLog = ($script:LogEntries | ForEach-Object { $_.Line }) -join "`n"
