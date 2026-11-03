@@ -3,6 +3,12 @@
 All notable changes are documented here. Format based on [Keep a Changelog](https://keepachangelog.com/).
 Live test results for changes that touch the enrollment path are recorded under the respective entry.
 
+## [Unreleased]
+
+### Added
+- `build\Build-Installer.ps1` builds a self-contained installer script for Intune (EXE and optional `settings.json` embedded,
+  install folder, Start menu shortcut, `-Uninstall`, exit code 1618 while the app is running). Tests in `tests\Installer.Tests.ps1`.
+
 ## [1.0.0] - 2026-10-27
 
 First release.

@@ -81,6 +81,23 @@ is a single file: it contains the app, unpacks itself to `%LOCALAPPDATA%\Passkey
 An optional `settings.json` next to the EXE overrides the defaults. Check a build with
 `powershell.exe -NoProfile -File .\tests\Invoke-UiSimulationTest.ps1 -ExePath .\dist\PasskeyProvisioner.exe`.
 
+## Intune installer
+
+`powershell.exe -NoProfile -File build\Build-Installer.ps1` turns the built EXE into one self-contained script,
+`dist\installer\<version>\Install-PasskeyProvisioner.ps1`, for Intune or a packaging service that accepts PowerShell installers.
+It embeds the EXE and an optional `settings.json`, copies them to a fixed folder (default `C:\Program Files\PasskeyProvisioner`),
+adds a Start menu shortcut and logs to `C:\Windows\Logs\Software\PasskeyProvisioner-install.log`. Run it as SYSTEM:
+
+| | Command |
+|---|---|
+| Install | `powershell.exe -NoProfile -ExecutionPolicy Bypass -File Install-PasskeyProvisioner.ps1` |
+| Uninstall | `powershell.exe -NoProfile -ExecutionPolicy Bypass -File Install-PasskeyProvisioner.ps1 -Uninstall` |
+| Detection | File `<folder>\PasskeyProvisioner.exe`, version greater than or equal to the release (`1.0.0.0`) |
+
+Exit codes: 0 done, 1618 the app is running (Intune retries later), 1 error. Organisation values stay local and are gitignored:
+`packaging\package.local.json` (`{ "targetDir": "..." }`) and `packaging\settings.local.json` (installed as `settings.json`).
+Raise `ModuleVersion` in `PasskeyProvisioner.Core.psd1` for every release, it becomes the EXE file version.
+
 ## License
 
 GNU General Public License v3.0, see [LICENSE](LICENSE). Third-party material is listed in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
